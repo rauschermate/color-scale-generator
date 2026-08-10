@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>color scale generator</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<!-- lucide icon sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="ic-copy" viewBox="0 0 24 24">
+    <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+  </symbol>
+  <symbol id="ic-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+</svg>
+
+<div class="wrap">
+
+  <header>
+    <h1>color scale <span class="paren">generator</span></h1>
+    <p>Pick one color. It becomes the 500, with lighter steps toward white and darker toward black.</p>
+    <div class="header-actions">
+      <nav class="nav">
+        <a class="nav-link" href="index.html">Mixer</a>
+        <a class="nav-link" href="scale.html" aria-current="page">Scale</a>
+      </nav>
+      <button class="theme-btn" id="themeBtn" type="button">
+      <!-- lucide: sun -->
+      <svg class="i-sun" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/>
+        <path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/>
+        <path d="M2 12h2"/><path d="M20 12h2"/>
+        <path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+      </svg>
+      <!-- lucide: moon -->
+      <svg class="i-moon" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div id="banner"></div>
+
+  <!-- BASE COLOR -->
+  <div class="color-card single-card">
+    <div class="label"><span class="dot" id="dotBase"></span> Base color</div>
+    <div class="color-row">
+      <div class="picker-well"><div class="fill" id="fillBase"></div><input type="color" id="pickBase" aria-label="Base color picker"></div>
+      <input type="text" id="textBase" spellcheck="false" autocomplete="off" aria-label="Base color value">
+      <span class="name-field">
+        <label for="nameInput">name</label>
+        <input type="text" id="nameInput" spellcheck="false" autocomplete="off" aria-label="Palette name">
+      </span>
+    </div>
+    <div class="chip-row">
+      <button class="chip" data-value="#3eb489" type="button">mint</button>
+      <button class="chip" data-value="#0a84ff" type="button">azure</button>
+      <button class="chip" data-value="#e2725b" type="button">terracotta</button>
+      <button class="chip" data-value="#7c3aed" type="button">violet</button>
+      <button class="chip" data-value="#64748b" type="button">slate</button>
+      <button class="chip" data-value="__random" type="button">random</button>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="section-head"><h2>Scale settings</h2></div>
+  <div class="panel">
+    <div class="settings">
+      <label class="field">
+        <span>Interpolation space</span>
+        <select id="space">
+          <optgroup label="Rectangular">
+            <option value="srgb">srgb</option>
+            <option value="srgb-linear">srgb-linear</option>
+            <option value="display-p3">display-p3</option>
+            <option value="a98-rgb">a98-rgb</option>
+            <option value="prophoto-rgb">prophoto-rgb</option>
+            <option value="rec2020">rec2020</option>
+            <option value="lab">lab</option>
+            <option value="oklab">oklab</option>
+            <option value="xyz">xyz</option>
+            <option value="xyz-d50">xyz-d50</option>
+            <option value="xyz-d65">xyz-d65</option>
+          </optgroup>
+          <optgroup label="Polar (hue)">
+            <option value="hsl">hsl</option>
+            <option value="hwb">hwb</option>
+            <option value="lch">lch</option>
+            <option value="oklch">oklch</option>
+          </optgroup>
+        </select>
+      </label>
+      <label class="field">
+        <span>Hue interpolation</span>
+        <select id="hue">
+          <option value="shorter">shorter hue</option>
+          <option value="longer">longer hue</option>
+          <option value="increasing">increasing hue</option>
+          <option value="decreasing">decreasing hue</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Steps (even)</span>
+        <input type="number" id="steps" min="2" max="40" step="2">
+      </label>
+      <label class="field">
+        <span>Curve</span>
+        <select id="curve">
+          <option value="lshaped">L-shaped</option>
+          <option value="linear">Linear</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Input format</span>
+        <select id="inFmt"></select>
+      </label>
+      <label class="field">
+        <span>Output format</span>
+        <select id="outFmt"></select>
+      </label>
+    </div>
+  </div>
+
+  <!-- SCALE -->
+  <div class="section-head"><h2>Scale</h2><span class="meta" id="scaleMeta"></span></div>
+  <div class="panel">
+    <div class="ramp"><div class="fill" id="rampFill"></div></div>
+    <div class="steps tokens" id="stepsGrid"></div>
+    <p class="hint">Click a swatch to copy its value · <kbd>Alt</kbd>-click to copy its <code>color-mix()</code> expression.</p>
+  </div>
+
+  <!-- CODE -->
+  <div class="section-head">
+    <h2>Generated CSS</h2>
+    <span class="seg">
+      <button class="chip" data-css="resolved" type="button" id="cssResolved">values</button>
+      <button class="chip" data-css="mix" type="button" id="cssMix">color-mix()</button>
+    </span>
+    <button class="btn ghost" id="copyCode" type="button" style="padding:3px 9px;font-size:12px">copy</button>
+  </div>
+  <div class="panel">
+    <pre class="code" id="code"></pre>
+  </div>
+
+</div>
+<div id="toast"></div>
+
+<script src="color-engine.js"></script>
+<script src="ui-common.js"></script>
+<script>
+"use strict";
+
+/* =========================================================================
+   APP — the palette scale generator
+   ========================================================================= */
+
+const STORE_KEY = "color-scale:v1";
+const WHITE = "white", BLACK = "black";
+
+const el = {
+  textBase: $("textBase"), pickBase: $("pickBase"), fillBase: $("fillBase"), dotBase: $("dotBase"),
+  nameInput: $("nameInput"),
+  space: $("space"), hue: $("hue"), steps: $("steps"), curve: $("curve"),
+  inFmt: $("inFmt"), outFmt: $("outFmt"),
+  rampFill: $("rampFill"), stepsWrap: $("stepsGrid"), scaleMeta: $("scaleMeta"),
+  code: $("code"), banner: $("banner"),
+};
+
+const state = {
+  color: "#3eb489",
+  name: "",              // blank = use the auto-detected name
+  space: "oklch",
+  hue: "shorter",
+  steps: 10,
+  curve: "lshaped",     // "lshaped" | "linear"
+  inFmt: "hex",
+  outFmt: "hex",
+  cssMode: "resolved",
+};
+
+for (const sel of [el.inFmt, el.outFmt]) {
+  for (const [value, label] of FORMATS) {
+    const o = document.createElement("option");
+    o.value = value; o.textContent = label;
+    sel.appendChild(o);
+  }
+}
+
+/* --- persistence --- */
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch {} }
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) Object.assign(state, JSON.parse(raw));
+  } catch {}
+}
+
+/* --- the canonical color behind the text field (see index.html for why) --- */
+let canon = null;
+function baseColor() {
+  if (canon) return canon;
+  const computed = resolveColor(state.color);
+  return (canon = computed ? parseColor(computed) : null);
+}
+
+function setColor(value, { reformat = false, canonical = null } = {}) {
+  state.color = value;
+  canon = canonical;
+  if (reformat) {
+    const c = baseColor();
+    if (c) state.color = formatColor(c, state.inFmt).text;
+  }
+  render(); save();
+}
+
+/* =========================================================================
+   SCALE MATH
+   ========================================================================= */
+
+function spaceClause() {
+  return state.space + (POLAR_SPACES.has(state.space) && state.hue !== "shorter" ? ` ${state.hue} hue` : "");
+}
+
+/* Token spacing: every step a whole unit from the base except the two
+   outermost, which sit half a unit further — that is what the 50 / 950 labels
+   mean. Used only for the token numbers; the colors are placed by lightness. */
+function stepDistance(i, n) {
+  const k = n / 2, u = Math.abs(i - k);
+  return u === k ? k - 0.5 : u;
+}
+
+/* ---- scale shape -------------------------------------------------------
+   Two gradings, chosen by state.curve.
+
+   "linear" is the plain reading of a scale: even mix increments outward from
+   the base, with the two end steps pulled in to half an increment so the ramp
+   stops just short of #ffffff and #000000. Kept because this is a testing
+   tool and it's the obvious baseline to compare against.
+
+   "lshaped" places each step by target *lightness* instead. In oklch,
+   lightness is linear in the mix amount, so a target L inverts exactly and
+   the percentage can be solved rather than guessed:
+
+       toward white   L = 1 - p(1 - Lb)   ->   p = (1 - L) / (1 - Lb)
+       toward black   L = p * Lb          ->   p = L / Lb
+
+   Tints ease out (EASE_LIGHT > 1) because pale colors compress visually and
+   need finer steps near the top. Shades ease in (EASE_DARK < 1) so the gaps
+   widen as they darken — evenly-spaced lightness reads as too-similar down
+   there, since chroma is collapsing at the same time. Tailwind does the same,
+   ending its ramps on a jump roughly twice the preceding step.
+
+   Both exponents and the endpoints were fitted against Tailwind's own ramps
+   and a hand-tuned design-system ladder. */
+const L_LIGHT_END = 0.97, L_DARK_END = 0.18;
+const EASE_LIGHT = 1.35, EASE_DARK = 0.82;
+
+const clamp01 = v => Math.max(0, Math.min(1, v));
+const easeOut = (t, g) => 1 - Math.pow(1 - t, g);
+
+function baseLightness() {
+  const c = baseColor();
+  return c ? toPolar(xyzToOklab(c.xyz))[0] : 0.5;
+}
+
+/* Percentage of the base color surviving at step i (base sits at i = n/2). */
+function stepPercent(i, n, Lb) {
+  const k = n / 2;
+  if (i === k) return 100;
+  if (state.curve === "linear") return (1 - stepDistance(i, n) / k) * 100;
+
+  const u = Math.abs(i - k) / k;
+  if (i < k) {
+    // A pale base has little room above it; fall back to a proportional
+    // target so the tints still separate instead of all clamping to white.
+    const hi = Math.max(L_LIGHT_END, 1 - (1 - Lb) * 0.45);
+    const target = Lb + (hi - Lb) * easeOut(u, EASE_LIGHT);
+    return 1 - Lb < 1e-6 ? 0 : clamp01((1 - target) / (1 - Lb)) * 100;
+  }
+  // Same for an already-dark base: 0.45 x its lightness keeps the shades
+  // spread out. For a normal mid-tone base this lands on L_DARK_END anyway.
+  const lo = Math.min(L_DARK_END, Lb * 0.45);
+  const target = Lb - (Lb - lo) * easeOut(u, EASE_DARK);
+  return Lb < 1e-6 ? 0 : clamp01(target / Lb) * 100;
+}
+
+/* Token numbers for an n-step scale (n even, n+1 tokens, base at 500).
+   Same ladder as the mix amounts, scaled to 500. At the default n=10 that is
+   exactly the familiar 50, 100, 200 … 900, 950. */
+function scaleTokens(n) {
+  const k = n / 2, unit = 500 / k;
+  const raw = Array.from({ length: n + 1 }, (_, i) => {
+    const d = stepDistance(i, n) * unit;
+    return i < k ? 500 - d : 500 + d;
+  });
+  const snapped = raw.map(v => Math.round(v / 5) * 5);
+  // only keep the tidy numbers if snapping didn't collapse two tokens together
+  return new Set(snapped).size === snapped.length ? snapped : raw.map(v => Math.round(v));
+}
+
+/* Step i of the scale: tinted toward white below the base, shaded toward black
+   above it. The base color itself is emitted verbatim, not round-tripped. */
+function buildStep(i, n, Lb = baseLightness()) {
+  const k = n / 2;
+  if (i === k) return state.color;                     // the picked color, verbatim
+  const p = stepPercent(i, n, Lb);
+  const rest = num(100 - p, 4), keep = num(p, 4);
+  return i < k
+    ? `color-mix(in ${spaceClause()}, ${WHITE} ${rest}%, ${state.color} ${keep}%)`
+    : `color-mix(in ${spaceClause()}, ${state.color} ${keep}%, ${BLACK} ${rest}%)`;
+}
+
+function autoName() {
+  const c = baseColor();
+  return c ? nameColor(c) : "color";
+}
+function paletteName() { return state.name.trim() || autoName(); }
+
+function randomColor() {
+  const r = () => Math.floor(Math.random() * 256);
+  const c = { xyz: rgbToXYZ([r() / 255, r() / 255, r() / 255], "srgb"), alpha: 1 };
+  return formatColor(c, state.inFmt).text;
+}
+
+/* =========================================================================
+   RENDER
+   ========================================================================= */
+
+function renderBaseCard() {
+  const raw = state.color;
+  if (document.activeElement !== el.textBase) el.textBase.value = raw;
+
+  const valid = isValidColor(raw);
+  el.textBase.classList.toggle("invalid", !valid);
+
+  const c = valid ? baseColor() : null;
+  if (c) {
+    el.fillBase.style.background = raw;
+    const hex = formatColor({ xyz: c.xyz, alpha: 1 }, "hex").text;
+    el.dotBase.style.background = hex;
+    el.pickBase.value = hex.slice(0, 7);
+  } else {
+    el.fillBase.style.background = "transparent";
+  }
+
+  if (document.activeElement !== el.nameInput) el.nameInput.value = state.name;
+  el.nameInput.placeholder = autoName();
+}
+
+function renderSteps(supported) {
+  const n = state.steps;
+  const tokens = scaleTokens(n);
+  const base = n / 2;
+  const Lb = baseLightness();          // one lookup for the whole ramp
+  const rows = [];
+  const frag = document.createDocumentFragment();
+
+  el.stepsWrap.classList.toggle("compact", n > 20);
+  el.stepsWrap.style.setProperty("--cols", n + 1);
+
+  for (let i = 0; i <= n; i++) {
+    const expr = buildStep(i, n, Lb);
+    const computed = supported ? resolveColor(expr) : null;
+    const parsed = computed ? parseColor(computed) : null;
+    const value = parsed ? formatColor(parsed, state.outFmt).text : "—";
+    rows.push({ token: tokens[i], expr, value, isBase: i === base });
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "step" + (i === base ? " base" : "");
+    btn.title = `${paletteName()}-${tokens[i]}  ·  ${value}` + (i === base ? "  (your color)" : "");
+
+    const box = document.createElement("span");
+    box.className = "chip-box";
+    const f = document.createElement("span");
+    f.className = "fill";
+    f.style.background = expr;
+    box.appendChild(f);
+
+    const t = document.createElement("span");
+    t.className = "pct";
+    t.textContent = tokens[i];
+
+    const v = document.createElement("span");
+    v.className = "val";
+    v.textContent = value;
+
+    btn.append(box, t, v);
+    btn.addEventListener("click", (ev) => {
+      if (ev.altKey) copy(expr, "expression");
+      else copy(value);
+    });
+    frag.appendChild(btn);
+  }
+
+  el.stepsWrap.replaceChildren(frag);
+  el.scaleMeta.textContent = `${paletteName()} · ${n + 1} steps · ${n / 2} lighter, ${n / 2} darker`
+    + (state.curve === "linear" ? " · linear" : "");
+  return rows;
+}
+
+function renderCode(rows) {
+  const useMix = state.cssMode === "mix";
+  const slug = slugify(paletteName());
+  const fmtLabel = (FORMATS.find(f => f[0] === state.outFmt) || [])[1] || state.outFmt;
+  const head = `/* ${slug} — ${rows.length} steps in ${spaceClause()}, ${state.color} at 500`
+             + (useMix ? "" : ` — as ${fmtLabel}`) + " */";
+
+  const plain = [head, ":root {"];
+  const html = [`<span class="c">${escapeHtml(head)}</span>`, ":root {"];
+
+  // pad the token so the values line up in the block
+  const width = Math.max(...rows.map(r => String(r.token).length));
+
+  rows.forEach(r => {
+    const name = `--${slug}-${r.token}`;
+    const pad = " ".repeat(width - String(r.token).length);
+    const resolved = r.value === "—" ? r.expr : r.value;
+    const value = useMix ? r.expr : resolved;
+    const note = r.isBase ? "  /* your color */" : "";   // the only note worth keeping
+    plain.push(`  ${name}:${pad} ${value};${note}`);
+    html.push(`  <span class="p">${escapeHtml(name)}</span>:${pad} ${escapeHtml(value)};`
+            + (note ? `<span class="c">${note}</span>` : ""));
+  });
+
+  plain.push("}"); html.push("}");
+  el.code.innerHTML = html.join("\n");
+  el.code.dataset.plain = plain.join("\n");
+
+  $("cssResolved").classList.toggle("active", !useMix);
+  $("cssMix").classList.toggle("active", useMix);
+}
+
+function render() {
+  el.space.value = state.space;
+  el.hue.value = state.hue;
+  el.hue.disabled = !POLAR_SPACES.has(state.space);
+  el.curve.value = state.curve;
+  el.inFmt.value = state.inFmt;
+  el.outFmt.value = state.outFmt;
+  if (document.activeElement !== el.steps) el.steps.value = state.steps;
+
+  renderBaseCard();
+
+  const probeExpr = buildStep(0, state.steps);
+  const supported = isValidColor(probeExpr) && isValidColor(state.color);
+
+  el.banner.innerHTML = "";
+  if (!supported) {
+    const why = !isValidColor(state.color)
+      ? "That is not a valid CSS color."
+      : `This browser rejected <code>color-mix(in ${spaceClause()}, …)</code>.`;
+    el.banner.innerHTML = `<div class="banner">${why}</div>`;
+  }
+
+  // span the scale's real endpoints, which stop short of white and black
+  const grad = `linear-gradient(to right in ${spaceClause()}, ${buildStep(0, state.steps)}, `
+             + `${state.color} 50%, ${buildStep(state.steps, state.steps)})`;
+  el.rampFill.style.background = "";
+  el.rampFill.style.background = grad;
+
+  renderCode(renderSteps(supported));
+}
+
+/* =========================================================================
+   WIRING
+   ========================================================================= */
+
+el.textBase.addEventListener("input", () => setColor(el.textBase.value));
+
+el.pickBase.addEventListener("input", () => {
+  const c = parseColor(el.pickBase.value);
+  if (c) setColor(formatColor(c, state.inFmt).text, { canonical: c });
+});
+
+el.nameInput.addEventListener("input", () => { state.name = el.nameInput.value; render(); save(); });
+
+document.querySelectorAll(".chip[data-value]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const v = btn.dataset.value;
+    setColor(v === "__random" ? randomColor() : v, { reformat: v !== "__random" });
+  });
+});
+
+el.space.addEventListener("change", () => { state.space = el.space.value; render(); save(); });
+el.hue.addEventListener("change", () => { state.hue = el.hue.value; render(); save(); });
+el.curve.addEventListener("change", () => { state.curve = el.curve.value; render(); save(); });
+
+/* Only even counts make a symmetric scale. Applied live when the typed value is
+   already even and in range; anything else is tidied up when the field is left,
+   so typing "1" on the way to "12" doesn't snap out from under you. */
+function commitSteps(v, { coerce }) {
+  if (!Number.isFinite(v)) return;
+  let n = coerce ? Math.round(v / 2) * 2 : v;
+  if (!coerce && (n % 2 !== 0 || n < 2 || n > 40)) return;
+  n = Math.max(2, Math.min(40, n));
+  if (n % 2 !== 0) n += 1;
+  state.steps = n; render(); save();
+}
+el.steps.addEventListener("input", () => commitSteps(parseInt(el.steps.value, 10), { coerce: false }));
+el.steps.addEventListener("change", () => commitSteps(parseInt(el.steps.value, 10), { coerce: true }));
+el.steps.addEventListener("blur", () => { el.steps.value = state.steps; });
+
+el.inFmt.addEventListener("change", () => {
+  state.inFmt = el.inFmt.value;
+  const c = baseColor();
+  if (c) state.color = formatColor(c, state.inFmt).text;   // canon preserved: no drift
+  render(); save();
+});
+el.outFmt.addEventListener("change", () => { state.outFmt = el.outFmt.value; render(); save(); });
+
+$("copyCode").addEventListener("click", () => copy(el.code.dataset.plain, "CSS"));
+document.querySelectorAll("[data-css]").forEach(btn => {
+  btn.addEventListener("click", () => { state.cssMode = btn.dataset.css; render(); save(); });
+});
+
+/* --- boot --- */
+load();
+initTheme(render);
+
+if (!window.CSS || !CSS.supports("color", "color-mix(in oklab, red, blue)")) {
+  el.banner.innerHTML = `<div class="banner">This browser does not support <code>color-mix()</code>. Swatches will not render.</div>`;
+}
+render();
+
+/* one frame late, so nothing animates its "enter" on page load */
+requestAnimationFrame(() => requestAnimationFrame(
+  () => document.documentElement.classList.add("ready")));
+</script>
+</body>
+</html>

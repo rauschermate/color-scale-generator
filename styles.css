@@ -1,0 +1,447 @@
+:root {
+  color-scheme: light dark;
+
+  --bg: #121419;
+  --panel: #16181f;
+  --panel-2: #1c1f28;
+  --line: #2a2e3a;
+  --line-soft: #22252f;
+  --text: #e7e9ef;
+  --muted: #939aad;
+  --faint: #6c7385;
+  --accent: #b9c0cf;
+  --accent-soft: #b9c0cf1f;
+  --danger: #ff6b6b;
+  --ok: #4ade80;
+
+  /* Concentric: controls are 8px and surfaces pad them by 16px, so the
+     surrounding surface must be 8 + 16 = 24px for the corners to nest. */
+  --r-control: 8px;
+  --pad: 16px;
+  --radius: 24px;
+
+  /* Swatch edges must be pure white/black at low opacity, never a tinted
+     neutral — a tinted line picks up the surface under it and reads as dirt
+     against the color it is supposed to be delineating. */
+  --swatch-outline: rgba(255, 255, 255, 0.1);
+  --shadow: 0 1px 2px rgba(0, 0, 0, .28), 0 6px 18px -6px rgba(0, 0, 0, .45);
+
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+:root[data-theme="light"] {
+  --bg: #f9fafb;
+  --panel: #ffffff;
+  --panel-2: #f6f7f9;
+  --line: #dfe3ea;
+  --line-soft: #e9ecf1;
+  --text: #14161c;
+  --muted: #5d6577;
+  --faint: #8b93a5;
+  --accent: #3f4653;
+  --accent-soft: #3f465314;
+  --danger: #d13b3b;
+  --ok: #16a34a;
+  --swatch-outline: rgba(0, 0, 0, 0.1);
+  --shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 6px 16px -8px rgba(0, 0, 0, .10);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  padding: 80px 20px;
+}
+.wrap { max-width: 1100px; margin: 0 auto; }
+
+/* ---------- header ---------- */
+header {
+  display: grid; grid-template-columns: 1fr auto;
+  align-items: center; column-gap: 12px; row-gap: 6px;
+  margin-bottom: 60px;
+}
+h1 {
+  font-size: 19px; margin: 0; letter-spacing: -0.01em;
+  font-family: var(--mono); font-weight: 600; text-wrap: balance;
+}
+h1 .paren { color: var(--faint); font-weight: 400; }
+header p {
+  grid-column: 1 / -1;                 /* its own line, under the title */
+  margin: 0; color: var(--muted); font-size: 13px; max-width: 68ch;
+  text-wrap: pretty;
+}
+/* Grouped so they centre against each other rather than against the header's
+   text baseline — an icon button has no baseline of its own, so `align-items:
+   baseline` would synthesize one from its bottom edge and knock it out of line. */
+.header-actions {
+  grid-column: 2; grid-row: 1;         /* stays beside the title, above the blurb */
+  display: flex; align-items: center; gap: 10px;
+  margin-left: auto; align-self: center;
+}
+.theme-btn {
+  background: var(--panel); border: 1px solid var(--line);
+  color: var(--muted); border-radius: 9px; cursor: pointer;
+  width: 34px; height: 34px; flex: none; padding: 0;
+  display: grid; place-items: center;
+}
+.theme-btn:hover { color: var(--text); border-color: var(--faint); }
+
+/* ---------- panels ---------- */
+.panel {
+  background: var(--panel); border: 1px solid var(--line-soft);
+  border-radius: var(--radius); padding: var(--pad);
+  box-shadow: var(--shadow);
+}
+.panel + .panel { margin-top: 18px; }
+/* section headings live above their box, not inside it */
+.section-head { display: flex; align-items: center; gap: 10px; margin: 40px 2px 12px; }
+.section-head h2 {
+  margin: 0 auto 0 0; font-size: 14px; font-weight: 600; color: var(--text);
+  letter-spacing: -0.005em; text-wrap: balance;
+}
+.section-head .meta { color: var(--faint); font-family: var(--mono); font-size: 12px; }
+
+/* ---------- color cards ---------- */
+.colors { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; position: relative; }
+/* sits in the gutter, straddling the seam between the two cards */
+.swap-btn {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 34px; height: 34px; padding: 0; border-radius: 50%; z-index: 2;
+  background: var(--panel-2); border: 1px solid var(--line); color: var(--muted);
+  display: grid; place-items: center; cursor: pointer;
+}
+.swap-btn:hover { color: var(--text); border-color: var(--faint); background: var(--panel); }
+.swap-btn:active { scale: 0.96; }
+.swap-btn svg {
+  display: block; fill: none; stroke: currentColor;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  transition-property: rotate;
+  transition-duration: .3s; transition-timing-function: var(--ease);
+}
+.color-card {
+  background: var(--panel); border: 1px solid var(--line-soft);
+  border-radius: var(--radius); padding: var(--pad);
+  box-shadow: var(--shadow);
+}
+.color-card .label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .09em;
+  color: var(--faint); font-weight: 600; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.color-card .label .dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--faint);
+}
+.color-row { display: flex; gap: 10px; align-items: center; }
+
+.picker-well {
+  position: relative; width: 46px; height: 46px; flex: 0 0 46px;
+  border-radius: var(--r-control); overflow: hidden;
+  border: 1px solid var(--swatch-outline);
+  background-image: var(--checker); background-size: 10px 10px;
+  background-position: 0 0, 5px 5px;
+  background-clip: padding-box;   /* keep the checker out from under the outline */
+}
+.picker-well .fill { position: absolute; inset: 0; }
+.picker-well input[type="color"] {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; cursor: pointer; border: 0; padding: 0;
+}
+
+input[type="text"], input[type="number"], select {
+  background: var(--panel-2); border: 1px solid var(--line); color: var(--text);
+  border-radius: var(--r-control); padding: 8px 10px; font: inherit; width: 100%;
+  transition-property: border-color, background-color;
+  transition-duration: .15s; transition-timing-function: var(--ease);
+}
+input[type="text"] { font-family: var(--mono); font-size: 13px; }
+input:focus, select:focus, button:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent;
+}
+input.invalid { border-color: var(--danger); }
+select { cursor: pointer; appearance: none; padding-right: 26px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--faint) 50%),
+                    linear-gradient(135deg, var(--faint) 50%, transparent 50%);
+  background-position: right 12px center, right 7px center;
+  background-size: 5px 5px, 5px 5px; background-repeat: no-repeat;
+}
+select:disabled { opacity: .4; cursor: not-allowed; }
+
+/* alpha sits inline after the value field, only as wide as it needs to be */
+.color-row input[type="text"] { flex: 1 1 auto; width: auto; min-width: 0; }
+.alpha-field { display: flex; align-items: center; gap: 6px; flex: none; }
+.alpha-field label { font-family: var(--mono); font-size: 14px; color: var(--faint); cursor: default; }
+.alpha-field input[type="number"] {
+  width: 76px; padding: 8px 6px 8px 8px; text-align: right;
+  font-family: var(--mono); font-size: 13px;
+}
+
+.chip-row { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.chip {
+  background: var(--panel-2); border: 1px solid var(--line); color: var(--muted);
+  border-radius: 999px; padding: 3px 9px; font-size: 11px; cursor: pointer;
+  font-family: var(--mono);
+}
+.chip:hover { color: var(--text); border-color: var(--faint); }
+.chip.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.seg { display: flex; gap: 5px; text-transform: none; letter-spacing: 0; }
+
+/* ---------- settings ---------- */
+.settings { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field > span { font-size: 11px; color: var(--muted); font-weight: 400; }
+
+button.btn {
+  background: var(--panel-2); border: 1px solid var(--line); color: var(--text);
+  border-radius: 8px; padding: 7px 12px; cursor: pointer; font: inherit; font-size: 13px;
+}
+button.btn:hover { border-color: var(--faint); }
+button.btn.ghost { background: transparent; color: var(--muted); }
+
+/* ---------- result ---------- */
+.pct-field {
+  display: flex; align-items: center; gap: 6px;
+  text-transform: none; letter-spacing: 0; font-family: var(--mono); font-size: 12px;
+}
+.pct-field input[type="number"] {
+  width: 66px; padding: 4px 6px 4px 8px; font-size: 13px; text-align: right;
+  font-family: var(--mono); font-weight: 600; color: var(--text);
+}
+
+.result { display: grid; grid-template-columns: 132px 1fr; gap: 18px; align-items: stretch; }
+.result-swatch {
+  border-radius: var(--r-control); border: 1px solid var(--swatch-outline); min-height: 122px;
+  background-image: var(--checker); background-size: 14px 14px; background-position: 0 0, 7px 7px;
+  background-clip: padding-box;   /* keep the checker out from under the outline */
+  position: relative; overflow: hidden;
+  display: block; width: 100%; padding: 0; cursor: pointer; font: inherit;
+}
+.result-swatch:hover { border-color: var(--muted); }
+.result-swatch .fill { position: absolute; inset: 0; }
+
+.value-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.value-row .big-value { min-width: 0; }
+.copy-btn {
+  flex: none; background: transparent; border: 1px solid transparent; color: var(--faint);
+  border-radius: 7px; width: 28px; height: 28px; padding: 0; cursor: pointer;
+  display: grid; place-items: center;
+}
+.copy-btn:hover { color: var(--text); background: var(--panel); border-color: var(--line); }
+.copy-btn svg {
+  display: block; fill: none; stroke: currentColor;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+.copy-btn.copied { color: var(--ok); }
+.result-main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.big-value {
+  font-family: var(--mono); font-size: clamp(20px, 4vw, 32px); font-weight: 600;
+  letter-spacing: -0.01em; word-break: break-all; line-height: 1.2;
+}
+/* expression sits on one row with the mix % — the box hugs its text */
+.expr-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.expr {
+  font-family: var(--mono); font-size: 12.5px; color: var(--text);
+  background: var(--panel-2); border: 1px solid var(--line-soft);
+  border-radius: var(--r-control); padding: 5px 5px 5px 10px; word-break: break-all;
+  display: flex; align-items: center; gap: 8px; min-height: 36px;
+  flex: 0 1 auto; min-width: 0;
+}
+/* keeps the mix field on the right edge even when the expression wraps it to its own line */
+.expr-row .pct-field { margin-left: auto; }
+.badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.badges:empty { display: none; }
+.badge {
+  font-size: 11px; padding: 2px 8px; border-radius: 999px;
+  border: 1px solid var(--line); color: var(--muted); font-family: var(--mono);
+}
+.badge.warn { color: #f5a524; border-color: #f5a52455; background: #f5a52411; }
+.badge.err { color: var(--danger); border-color: color-mix(in srgb, var(--danger), transparent 60%); }
+
+/* ---------- ramp ---------- */
+.ramp {
+  height: 26px; border-radius: var(--r-control); border: 1px solid var(--swatch-outline);
+  background-image: var(--checker); background-size: 10px 10px; background-position: 0 0, 5px 5px;
+  background-clip: padding-box;   /* keep the checker out from under the outline */
+  position: relative; overflow: hidden; margin-bottom: 16px;
+}
+.ramp .fill { position: absolute; inset: 0; }
+
+/* one swatch per column, single row — --cols is set from the step count */
+.steps { display: grid; gap: 8px; grid-template-columns: repeat(var(--cols, 11), minmax(0, 1fr)); }
+.steps.compact { gap: 2px; }
+.step {
+  background: none; border: 0; padding: 0; cursor: pointer; text-align: left;
+  display: flex; flex-direction: column; gap: 5px; font: inherit; color: inherit;
+  border-radius: 8px;
+}
+.step .chip-box {
+  height: 62px; border-radius: var(--r-control); border: 1px solid var(--swatch-outline);
+  background-image: var(--checker); background-size: 10px 10px; background-position: 0 0, 5px 5px;
+  background-clip: padding-box;   /* keep the checker out from under the outline */
+  position: relative; overflow: hidden;
+}
+.step .chip-box .fill { position: absolute; inset: 0; }
+.step:hover .chip-box { border-color: var(--muted); }
+.step .pct { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.step .val { font-family: var(--mono); font-size: 10.5px; color: var(--faint); word-break: break-all; line-height: 1.35; }
+.steps.compact .chip-box { height: 54px; border-radius: 3px; border-width: 1px; }
+.steps.compact .pct, .steps.compact .val { display: none; }
+
+/* ---------- code ---------- */
+pre.code {
+  margin: 0; font-family: var(--mono); font-size: 12px; line-height: 1.7;
+  background: var(--panel-2); border: 1px solid var(--line-soft); border-radius: var(--r-control);
+  padding: 12px 14px; overflow-x: auto; color: var(--text);
+  max-height: 320px; overflow-y: auto;
+}
+pre.code .c { color: var(--faint); }
+pre.code .p { color: var(--accent); }
+
+.hint { color: var(--faint); font-size: 12px; margin: 10px 0 0; }
+.result-main .hint { margin: 0; }   /* spacing comes from the column gap instead */
+.hint kbd {
+  font-family: var(--mono); font-size: 11px; border: 1px solid var(--line);
+  border-radius: 4px; padding: 0 4px; background: var(--panel-2);
+}
+
+.banner {
+  border: 1px solid color-mix(in srgb, var(--danger), transparent 60%);
+  background: color-mix(in srgb, var(--danger), transparent 92%);
+  color: var(--danger); border-radius: var(--r-control); padding: 10px 12px; font-size: 13px;
+  margin-bottom: 14px;
+}
+
+#toast {
+  position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 14px);
+  background: var(--text); color: var(--bg); font-size: 13px; font-weight: 500;
+  padding: 8px 14px; border-radius: 999px; opacity: 0; pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease; z-index: 20;
+  font-family: var(--mono);
+}
+#toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+@media (max-width: 720px) {
+  .colors { grid-template-columns: 1fr; }
+  /* cards stack, so the arrows should point up/down */
+  .swap-btn { transform: translate(-50%, -50%) rotate(90deg); }
+
+  .result { grid-template-columns: 1fr; }
+  .result-swatch { min-height: 90px; }
+  /* too narrow for one row — let the swatches wrap instead of hairlining */
+  .steps { grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); }
+  .steps.compact { grid-template-columns: repeat(auto-fit, minmax(14px, 1fr)); }
+}
+
+/* ---------- page nav ---------- */
+.nav { display: flex; gap: 4px; align-items: center; }
+.nav-link {
+  font-size: 12.5px; color: var(--muted); text-decoration: none;
+  display: inline-flex; align-items: center; height: 34px; padding: 0 12px;
+  border-radius: 9px; border: 1px solid transparent;   /* matches .theme-btn */
+}
+.nav-link:hover { color: var(--text); background: var(--panel); }
+.nav-link[aria-current="page"] { color: var(--text); background: var(--panel); border-color: var(--line); }
+
+/* ---------- scale page ---------- */
+.single-card { margin-bottom: 4px; }
+.name-field { display: flex; align-items: center; gap: 6px; flex: none; }
+.name-field label {
+  font-size: 11px; color: var(--faint); text-transform: uppercase;
+  letter-spacing: .07em; font-weight: 600;
+}
+.name-field input[type="text"] { width: 168px; flex: none; }
+
+/* the base color the user actually picked, sitting mid-scale */
+.step.base .chip-box { outline: 2px solid var(--accent); outline-offset: 2px; }
+.step.base .pct { color: var(--accent); font-weight: 600; }
+.steps.tokens .pct { font-size: 11.5px; }
+
+/* =============================================================================
+   INTERACTION POLISH
+   ============================================================================= */
+
+/* --- Contextual icon animation -------------------------------------------
+   Both icons stay in the DOM stacked in the same grid cell and cross-fade with
+   scale + blur, so the swap has an exit as well as an enter. Toggling
+   `display` gave a hard cut and no exit at all. */
+.theme-btn svg,
+.copy-btn svg {
+  grid-area: 1 / 1;
+  opacity: 0; scale: 0.25; filter: blur(4px);
+  transition-property: opacity, scale, filter;
+  transition-duration: .25s;
+  transition-timing-function: var(--ease);
+}
+:root[data-theme="dark"] .theme-btn .i-sun,
+:root[data-theme="light"] .theme-btn .i-moon,
+.copy-btn .i-copy,
+.copy-btn.copied .i-check {
+  opacity: 1; scale: 1; filter: blur(0px);
+}
+.copy-btn.copied .i-copy { opacity: 0; scale: 0.25; filter: blur(4px); }
+
+/* --- Interruptible hover / press ----------------------------------------- */
+.theme-btn, .swap-btn, .copy-btn, .nav-link, .chip, button.btn,
+.step .chip-box, .result-swatch {
+  transition-property: color, background-color, border-color, box-shadow, scale;
+  transition-duration: .15s;
+  transition-timing-function: var(--ease);
+}
+
+/* Tactile press. 0.96 is the floor — anything smaller reads as exaggerated. */
+.theme-btn:active, .copy-btn:active, .nav-link:active,
+.chip:active, button.btn:active, .step:active, .result-swatch:active {
+  scale: 0.96;
+}
+/* .result-swatch already lists scale above — only .step needs its own rule */
+.step {
+  transition-property: scale; transition-duration: .15s;
+  transition-timing-function: var(--ease);
+}
+
+/* --- Minimum 40x40 hit area ----------------------------------------------
+   The visible controls are deliberately small; the pseudo-element grows only
+   the touch target. Widths use max() so nothing spills into a neighbour's
+   target — every chip is already wider than 40px, so only height grows. */
+/* .swap-btn is deliberately absolute already — don't reset it to relative */
+.theme-btn, .copy-btn, .nav-link, .chip, button.btn { position: relative; }
+.theme-btn::after, .swap-btn::after, .copy-btn::after,
+.nav-link::after, .chip::after, button.btn::after {
+  content: ""; position: absolute; left: 50%; top: 50%;
+  width: max(100%, 40px); height: max(100%, 40px);
+  transform: translate(-50%, -50%);
+}
+
+/* --- Numerals ------------------------------------------------------------
+   Values rewrite on every keystroke; tabular figures keep them from jittering
+   even if the monospace stack falls back to a proportional face. */
+.big-value, .step .pct, .step .val, .badge, .section-head .meta,
+.expr, pre.code, input[type="number"] {
+  font-variant-numeric: tabular-nums;
+}
+
+.hint { text-wrap: pretty; }
+
+/* --- Staged enter --------------------------------------------------------
+   Split by section and staggered rather than fading the page in as one block.
+   `.ready` is set after the first paint so the icon cross-fades above don't
+   play their enter animation on load. */
+@media (prefers-reduced-motion: no-preference) {
+  :root.ready .wrap > * { animation: section-enter .45s var(--ease) backwards; }
+  :root.ready .wrap > *:nth-child(2)  { animation-delay: .04s; }
+  :root.ready .wrap > *:nth-child(3)  { animation-delay: .08s; }
+  :root.ready .wrap > *:nth-child(4)  { animation-delay: .12s; }
+  :root.ready .wrap > *:nth-child(5)  { animation-delay: .16s; }
+  :root.ready .wrap > *:nth-child(6)  { animation-delay: .20s; }
+  :root.ready .wrap > *:nth-child(7)  { animation-delay: .24s; }
+  :root.ready .wrap > *:nth-child(8)  { animation-delay: .28s; }
+  :root.ready .wrap > *:nth-child(n+9) { animation-delay: .32s; }
+}
+@keyframes section-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+:root:not(.ready) .theme-btn svg,
+:root:not(.ready) .copy-btn svg { transition: none; }

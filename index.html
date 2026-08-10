@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>color-mix() lab</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<!-- lucide icon sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="ic-copy" viewBox="0 0 24 24">
+    <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+  </symbol>
+  <symbol id="ic-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="ic-swap" viewBox="0 0 24 24">
+    <path d="M8 3 4 7l4 4"/><path d="M4 7h16"/>
+    <path d="m16 21 4-4-4-4"/><path d="M20 17H4"/>
+  </symbol>
+</svg>
+
+<div class="wrap">
+
+  <header>
+    <h1>color-mix<span class="paren">()</span> lab</h1>
+    <p>Mix two colors in any CSS interpolation space. Live values, straight from the browser.</p>
+    <div class="header-actions">
+      <nav class="nav">
+        <a class="nav-link" href="index.html" aria-current="page">Mixer</a>
+        <a class="nav-link" href="scale.html">Scale</a>
+      </nav>
+      <button class="theme-btn" id="themeBtn" type="button">
+      <!-- lucide: sun -->
+      <svg class="i-sun" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/>
+        <path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/>
+        <path d="M2 12h2"/><path d="M20 12h2"/>
+        <path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+      </svg>
+      <!-- lucide: moon -->
+      <svg class="i-moon" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div id="banner"></div>
+
+  <!-- COLORS -->
+  <div class="colors">
+    <div class="color-card">
+      <div class="label"><span class="dot" id="dotA"></span> Color A</div>
+      <div class="color-row">
+        <div class="picker-well"><div class="fill" id="fillA"></div><input type="color" id="pickA" aria-label="Color A picker"></div>
+        <input type="text" id="textA" spellcheck="false" autocomplete="off" aria-label="Color A value">
+        <span class="alpha-field" title="Alpha (0–1)">
+          <label for="alphaA">α</label>
+          <input type="number" id="alphaA" min="0" max="1" step="0.01" aria-label="Alpha for color A">
+        </span>
+      </div>
+      <div class="chip-row">
+        <button class="chip" data-set="A" data-value="transparent" type="button">transparent</button>
+        <button class="chip" data-set="A" data-value="white" type="button">white</button>
+        <button class="chip" data-set="A" data-value="black" type="button">black</button>
+        <button class="chip" data-set="A" data-value="__random" type="button">random</button>
+      </div>
+    </div>
+
+    <div class="color-card">
+      <div class="label"><span class="dot" id="dotB"></span> Color B</div>
+      <div class="color-row">
+        <div class="picker-well"><div class="fill" id="fillB"></div><input type="color" id="pickB" aria-label="Color B picker"></div>
+        <input type="text" id="textB" spellcheck="false" autocomplete="off" aria-label="Color B value">
+        <span class="alpha-field" title="Alpha (0–1)">
+          <label for="alphaB">α</label>
+          <input type="number" id="alphaB" min="0" max="1" step="0.01" aria-label="Alpha for color B">
+        </span>
+      </div>
+      <div class="chip-row">
+        <button class="chip" data-set="B" data-value="transparent" type="button">transparent</button>
+        <button class="chip" data-set="B" data-value="white" type="button">white</button>
+        <button class="chip" data-set="B" data-value="black" type="button">black</button>
+        <button class="chip" data-set="B" data-value="__random" type="button">random</button>
+      </div>
+    </div>
+
+    <button class="swap-btn" id="swapBtn" type="button" title="Swap A and B" aria-label="Swap colors A and B">
+      <svg width="16" height="16" aria-hidden="true"><use href="#ic-swap"/></svg>
+    </button>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="section-head"><h2>Mix settings</h2></div>
+  <div class="panel">
+    <div class="settings">
+      <label class="field">
+        <span>Interpolation space</span>
+        <select id="space">
+          <optgroup label="Rectangular">
+            <option value="srgb">srgb</option>
+            <option value="srgb-linear">srgb-linear</option>
+            <option value="display-p3">display-p3</option>
+            <option value="a98-rgb">a98-rgb</option>
+            <option value="prophoto-rgb">prophoto-rgb</option>
+            <option value="rec2020">rec2020</option>
+            <option value="lab">lab</option>
+            <option value="oklab">oklab</option>
+            <option value="xyz">xyz</option>
+            <option value="xyz-d50">xyz-d50</option>
+            <option value="xyz-d65">xyz-d65</option>
+          </optgroup>
+          <optgroup label="Polar (hue)">
+            <option value="hsl">hsl</option>
+            <option value="hwb">hwb</option>
+            <option value="lch">lch</option>
+            <option value="oklch">oklch</option>
+          </optgroup>
+        </select>
+      </label>
+      <label class="field">
+        <span>Hue interpolation</span>
+        <select id="hue">
+          <option value="shorter">shorter hue</option>
+          <option value="longer">longer hue</option>
+          <option value="increasing">increasing hue</option>
+          <option value="decreasing">decreasing hue</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Steps</span>
+        <input type="number" id="steps" min="1" max="100" step="1">
+      </label>
+      <label class="field">
+        <span>Input format</span>
+        <select id="inFmt"></select>
+      </label>
+      <label class="field">
+        <span>Output format</span>
+        <select id="outFmt"></select>
+      </label>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="section-head"><h2>Mixed color</h2></div>
+  <div class="panel">
+    <div class="result">
+      <button class="result-swatch" id="mixSwatch" type="button"
+              title="Click to copy value · Alt-click to copy color-mix()">
+        <span class="fill" id="mixFill"></span>
+      </button>
+      <div class="result-main">
+        <div class="value-row">
+          <div class="big-value" id="mixValue">—</div>
+          <button class="copy-btn" id="copyValueBtn" type="button" title="Copy value" aria-label="Copy value">
+            <svg class="i-copy" width="16" height="16" aria-hidden="true"><use href="#ic-copy"/></svg>
+            <svg class="i-check" width="16" height="16" aria-hidden="true"><use href="#ic-check"/></svg>
+          </button>
+        </div>
+        <div class="badges" id="mixBadges"></div>
+        <div class="expr-row">
+          <div class="expr">
+            <span id="mixExpr"></span>
+            <button class="copy-btn" id="copyExprBtn" type="button" title="Copy color-mix()" aria-label="Copy color-mix() expression">
+              <svg class="i-copy" width="16" height="16" aria-hidden="true"><use href="#ic-copy"/></svg>
+              <svg class="i-check" width="16" height="16" aria-hidden="true"><use href="#ic-check"/></svg>
+            </button>
+          </div>
+          <span class="pct-field">
+            <label for="mixPct">mix</label>
+            <input type="number" id="mixPct" min="0" max="100" step="1" aria-label="Mix percentage of color B">
+            <span>%</span>
+          </span>
+        </div>
+        <p class="hint">hex / rgb / hsl / hwb are gamut-mapped into sRGB (OKLCh chroma reduction). <code>color()</code> and lab/lch/oklab/oklch keep out-of-range values as-is.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEPS -->
+  <div class="section-head"><h2>Scale</h2><span class="meta" id="stepCount"></span></div>
+  <div class="panel">
+    <div class="ramp"><div class="fill" id="rampFill"></div></div>
+    <div class="steps" id="stepsGrid"></div>
+    <p class="hint">Click a swatch to copy its value · <kbd>Alt</kbd>-click to copy its <code>color-mix()</code> expression.</p>
+  </div>
+
+  <!-- CODE -->
+  <div class="section-head">
+    <h2>Generated CSS</h2>
+    <span class="seg">
+      <button class="chip" data-css="resolved" type="button" id="cssResolved">values</button>
+      <button class="chip" data-css="mix" type="button" id="cssMix">color-mix()</button>
+    </span>
+    <button class="btn ghost" id="copyCode" type="button" style="padding:3px 9px;font-size:12px">copy</button>
+  </div>
+  <div class="panel">
+    <pre class="code" id="code"></pre>
+  </div>
+
+</div>
+<div id="toast"></div>
+
+<script src="color-engine.js"></script>
+<script src="ui-common.js"></script>
+<script>
+/* =========================================================================
+   APP — the color-mix playground
+   ========================================================================= */
+
+const STORE_KEY = "color-mix-lab:v1";
+
+const el = {
+  textA: $("textA"), textB: $("textB"), pickA: $("pickA"), pickB: $("pickB"),
+  fillA: $("fillA"), fillB: $("fillB"), dotA: $("dotA"), dotB: $("dotB"),
+  alphaA: $("alphaA"), alphaB: $("alphaB"),
+  space: $("space"), hue: $("hue"), steps: $("steps"), inFmt: $("inFmt"), outFmt: $("outFmt"),
+  mixFill: $("mixFill"), mixValue: $("mixValue"),
+  mixExpr: $("mixExpr"), mixBadges: $("mixBadges"), rampFill: $("rampFill"),
+  mixPct: $("mixPct"), mixSwatch: $("mixSwatch"),
+  stepsWrap: $("stepsGrid"), stepCount: $("stepCount"), code: $("code"), banner: $("banner"),
+};
+
+const state = {
+  a: "#ff3b30",
+  b: "#0a84ff",
+  space: "oklch",
+  hue: "shorter",
+  steps: 10,
+  mixPct: 50,
+  inFmt: "hex",
+  outFmt: "hex",
+  cssMode: "resolved",
+};
+
+/* --- populate format selects --- */
+for (const sel of [el.inFmt, el.outFmt]) {
+  for (const [value, label] of FORMATS) {
+    const o = document.createElement("option");
+    o.value = value; o.textContent = label;
+    sel.appendChild(o);
+  }
+}
+
+/* --- persistence --- */
+function save() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch {}
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) Object.assign(state, JSON.parse(raw));
+  } catch {}
+}
+
+/* --- expression building --- */
+function spaceClause() {
+  return state.space + (POLAR_SPACES.has(state.space) && state.hue !== "shorter" ? ` ${state.hue} hue` : "");
+}
+function buildMix(pctB) {
+  const a = num(100 - pctB, 4), b = num(pctB, 4);
+  return `color-mix(in ${spaceClause()}, ${state.a} ${a}%, ${state.b} ${b}%)`;
+}
+
+/* --- input handling ---
+   `canon` holds the exact color behind each input. Text is a *rendering* of it
+   at a fixed precision, so re-deriving from text on every format switch would
+   compound rounding error (#ff3b30 -> oklch -> hsl would drift to 99.98%).
+   The canonical value is only recomputed when the user actually changes a color. */
+const canon = { a: null, b: null };
+
+function currentColor(which) {
+  if (canon[which]) return canon[which];
+  const computed = resolveColor(state[which]);
+  return (canon[which] = computed ? parseColor(computed) : null);
+}
+
+/* Rewrite one of the inputs in the active input format, keeping alpha. */
+function reformat(which) {
+  if (state[which].trim().toLowerCase() === "transparent") return;
+  const c = currentColor(which);
+  if (!c) return;
+  state[which] = formatColor(c, state.inFmt).text; // canon deliberately preserved
+}
+
+function setColor(which, value, { reformat: doReformat = false, canonical = null } = {}) {
+  state[which] = value;
+  canon[which] = canonical;                        // null = re-derive from the new text
+  if (doReformat) reformat(which);
+  render();
+  save();
+}
+
+function randomColor() {
+  const r = () => Math.floor(Math.random() * 256);
+  const c = { xyz: rgbToXYZ([r() / 255, r() / 255, r() / 255], "srgb"), alpha: 1 };
+  return formatColor(c, state.inFmt).text;
+}
+
+/* =========================================================================
+   RENDER
+   ========================================================================= */
+
+function renderColorCard(which) {
+  const isA = which === "a";
+  const text = isA ? el.textA : el.textB;
+  const pick = isA ? el.pickA : el.pickB;
+  const fill = isA ? el.fillA : el.fillB;
+  const dot = isA ? el.dotA : el.dotB;
+  const alpha = isA ? el.alphaA : el.alphaB;
+
+  const raw = state[which];
+  if (document.activeElement !== text) text.value = raw;
+
+  const valid = isValidColor(raw);
+  text.classList.toggle("invalid", !valid);
+
+  const c = valid ? currentColor(which) : null;
+  if (c) {
+    fill.style.background = raw;
+    dot.style.background = formatColor({ xyz: c.xyz, alpha: 1 }, "hex").text;
+    pick.value = formatColor({ xyz: c.xyz, alpha: 1 }, "hex").text.slice(0, 7);
+    if (document.activeElement !== alpha) alpha.value = num(c.alpha, 2);
+  } else {
+    fill.style.background = "transparent";
+  }
+}
+
+function renderSteps(mixSupported) {
+  const n = state.steps;
+  const frag = document.createDocumentFragment();
+  const rows = [];
+  el.stepsWrap.classList.toggle("compact", n > 20);
+  el.stepsWrap.style.setProperty("--cols", n + 1);
+
+  for (let i = 0; i <= n; i++) {
+    const pct = (i / n) * 100;
+    const expr = buildMix(pct);
+    const computed = mixSupported ? resolveColor(expr) : null;
+    const parsed = computed ? parseColor(computed) : null;
+    const value = parsed ? formatColor(parsed, state.outFmt).text : "—";
+    rows.push({ pct, expr, value });
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "step";
+    btn.title = `${num(pct, 2)}% B  ·  ${value}`;
+
+    const box = document.createElement("span");
+    box.className = "chip-box";
+    const f = document.createElement("span");
+    f.className = "fill";
+    f.style.background = expr;
+    box.appendChild(f);
+
+    const p = document.createElement("span");
+    p.className = "pct";
+    p.textContent = num(pct, 2) + "%";
+
+    const v = document.createElement("span");
+    v.className = "val";
+    v.textContent = value;
+
+    btn.append(box, p, v);
+    btn.addEventListener("click", (ev) => {
+      if (ev.altKey) copy(expr, "expression");
+      else copy(value);
+    });
+    frag.appendChild(btn);
+  }
+  el.stepsWrap.replaceChildren(frag);
+  el.stepCount.textContent = `${n + 1} swatches · ${num(100 / n, 2)}% apart`;
+  return rows;
+}
+
+function renderCode(rows) {
+  const useMix = state.cssMode === "mix";
+  const pad = String(rows.length - 1).length;
+  const fmtLabel = (FORMATS.find(f => f[0] === state.outFmt) || [])[1] || state.outFmt;
+  const head = `/* in ${spaceClause()} — ${state.a} → ${state.b}`
+             + (useMix ? "" : ` — as ${fmtLabel}`) + " */";
+
+  const plain = [head, ":root {"];
+  const html = [`<span class="c">${escapeHtml(head)}</span>`, ":root {"];
+
+  rows.forEach((r, i) => {
+    const name = `--mix-${String(i).padStart(pad, "0")}`;
+    // fall back to the expression if the mix could not be resolved
+    const resolved = r.value === "—" ? r.expr : r.value;
+    const value = useMix ? r.expr : resolved;
+    plain.push(`  ${name}: ${value};`);
+    html.push(`  <span class="p">${name}</span>: ${escapeHtml(value)};`);
+  });
+
+  plain.push("}"); html.push("}");
+  el.code.innerHTML = html.join("\n");
+  el.code.dataset.plain = plain.join("\n");
+
+  $("cssResolved").classList.toggle("active", !useMix);
+  $("cssMix").classList.toggle("active", useMix);
+}
+
+function render() {
+  el.space.value = state.space;
+  el.hue.value = state.hue;
+  el.hue.disabled = !POLAR_SPACES.has(state.space);
+  el.steps.value = state.steps;
+  el.inFmt.value = state.inFmt;
+  el.outFmt.value = state.outFmt;
+  if (document.activeElement !== el.mixPct) el.mixPct.value = state.mixPct;
+
+  renderColorCard("a");
+  renderColorCard("b");
+
+  const mainExpr = buildMix(state.mixPct);
+  const supported = isValidColor(mainExpr);
+
+  el.banner.innerHTML = "";
+  if (!supported) {
+    const why = !isValidColor(state.a) ? "Color A is not a valid CSS color."
+      : !isValidColor(state.b) ? "Color B is not a valid CSS color."
+      : `This browser rejected <code>color-mix(in ${spaceClause()}, …)</code>.`;
+    el.banner.innerHTML = `<div class="banner">${why}</div>`;
+  }
+
+  const computed = supported ? resolveColor(mainExpr) : null;
+  const parsed = computed ? parseColor(computed) : null;
+
+  el.mixFill.style.background = supported ? mainExpr : "transparent";
+  el.mixExpr.textContent = mainExpr;
+
+  const badges = [];
+  if (parsed) {
+    const { text, mapped } = formatColor(parsed, state.outFmt);
+    el.mixValue.textContent = text;
+    el.mixValue.dataset.value = text;
+    if (parsed.alpha < 1) badges.push(["", `alpha ${num(parsed.alpha, 3)}`]);
+    if (isOutOfSrgb(parsed)) badges.push(["warn", "outside sRGB"]);
+    if (mapped && SRGB_BOUND.has(state.outFmt)) badges.push(["warn", "gamut-mapped"]);
+  } else {
+    el.mixValue.textContent = "—";
+    el.mixValue.dataset.value = "";
+    badges.push(["err", "unsupported"]);
+  }
+  el.mixBadges.innerHTML = badges
+    .map(([cls, txt]) => `<span class="badge ${cls}">${txt}</span>`).join("");
+
+  // continuous ramp — same space & hue method, via linear-gradient
+  const grad = `linear-gradient(to right in ${spaceClause()}, ${state.a}, ${state.b})`;
+  el.rampFill.style.background = "";
+  el.rampFill.style.background = grad;
+  if (!el.rampFill.style.background) {
+    el.rampFill.style.background =
+      `linear-gradient(to right, ${[0, 25, 50, 75, 100].map(p => buildMix(p)).join(",")})`;
+  }
+
+  const rows = renderSteps(supported);
+  renderCode(rows);
+}
+
+/* =========================================================================
+   WIRING
+   ========================================================================= */
+
+el.textA.addEventListener("input", () => setColor("a", el.textA.value));
+el.textB.addEventListener("input", () => setColor("b", el.textB.value));
+
+el.pickA.addEventListener("input", () => setFromPicker("a", el.pickA.value));
+el.pickB.addEventListener("input", () => setFromPicker("b", el.pickB.value));
+function setFromPicker(which, hex) {
+  const prev = currentColor(which);
+  const c = parseColor(hex);
+  if (!c) return;
+  c.alpha = prev ? prev.alpha : 1;
+  setColor(which, formatColor(c, state.inFmt).text, { canonical: c });
+}
+
+for (const [which, field] of [["a", el.alphaA], ["b", el.alphaB]]) {
+  field.addEventListener("input", () => {
+    const v = parseFloat(field.value);
+    if (!Number.isFinite(v)) return;               // mid-edit / empty field
+    const prev = currentColor(which);
+    const c = { xyz: prev ? prev.xyz : [0, 0, 0], alpha: Math.max(0, Math.min(1, v)) };
+    setColor(which, formatColor(c, state.inFmt).text, { canonical: c });
+  });
+  // snap the display back to the clamped, 2-decimal value once editing ends
+  field.addEventListener("blur", () => {
+    const c = currentColor(which);
+    field.value = c ? num(c.alpha, 2) : "1";
+  });
+}
+
+document.querySelectorAll(".chip[data-set]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const which = btn.dataset.set.toLowerCase();
+    const v = btn.dataset.value;
+    setColor(which, v === "__random" ? randomColor() : v, { reformat: v !== "transparent" && v !== "__random" });
+  });
+});
+
+let swapSpin = 0;
+$("swapBtn").addEventListener("click", (e) => {
+  [state.a, state.b] = [state.b, state.a];
+  [canon.a, canon.b] = [canon.b, canon.a];
+  swapSpin += 180;                                  // icon turns over on each swap
+  e.currentTarget.querySelector("svg").style.rotate = `${swapSpin}deg`;
+  render(); save();
+});
+
+el.space.addEventListener("change", () => { state.space = el.space.value; render(); save(); });
+el.hue.addEventListener("change", () => { state.hue = el.hue.value; render(); save(); });
+el.steps.addEventListener("input", () => {
+  const n = Math.max(1, Math.min(100, parseInt(el.steps.value, 10) || 10));
+  state.steps = n; render(); save();
+});
+el.inFmt.addEventListener("change", () => {
+  state.inFmt = el.inFmt.value;
+  reformat("a"); reformat("b");
+  render(); save();
+});
+el.outFmt.addEventListener("change", () => { state.outFmt = el.outFmt.value; render(); save(); });
+
+el.mixPct.addEventListener("input", () => {
+  const v = parseFloat(el.mixPct.value);
+  if (!Number.isFinite(v)) return;                 // mid-edit / empty field
+  state.mixPct = Math.max(0, Math.min(100, v));
+  render(); save();
+});
+el.mixPct.addEventListener("blur", () => { el.mixPct.value = state.mixPct; });
+
+/* copy affordances: icon buttons, plus click / alt-click on the swatch itself */
+const mixVal = () => el.mixValue.dataset.value;
+
+$("copyValueBtn").addEventListener("click", (e) => {
+  if (!mixVal()) return;
+  copy(mixVal()); flashCopied(e.currentTarget);
+});
+$("copyExprBtn").addEventListener("click", (e) => {
+  copy(el.mixExpr.textContent, "expression"); flashCopied(e.currentTarget);
+});
+el.mixSwatch.addEventListener("click", (ev) => {
+  if (ev.altKey) copy(el.mixExpr.textContent, "expression");
+  else if (mixVal()) copy(mixVal());
+});
+$("copyCode").addEventListener("click", () => copy(el.code.dataset.plain, "CSS"));
+
+document.querySelectorAll("[data-css]").forEach(btn => {
+  btn.addEventListener("click", () => { state.cssMode = btn.dataset.css; render(); save(); });
+});
+
+/* --- boot --- */
+load();
+initTheme(render);
+
+if (!window.CSS || !CSS.supports("color", "color-mix(in oklab, red, blue)")) {
+  el.banner.innerHTML = `<div class="banner">This browser does not support <code>color-mix()</code>. Swatches will not render.</div>`;
+}
+render();
+
+/* one frame late, so nothing animates its "enter" on page load */
+requestAnimationFrame(() => requestAnimationFrame(
+  () => document.documentElement.classList.add("ready")));
+</script>
+</body>
+</html>
