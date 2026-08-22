@@ -19,15 +19,50 @@ resolved value, a step ramp, and the CSS for both.
 Build a design-system palette from one color. The color becomes the `500`.
 Lighter steps go toward white and darker steps go toward black.
 
-Two gradings are available:
+Three gradings are available:
 
 - **Linear** — even mix increments outward from the base color.
 - **L-shaped** — each step sits at a target lightness. The tints ease out and
   the shades ease in. This grading matches a hand-tuned palette to about one
   percentage point per step.
+- **Custom** — no mix at all. Each step reads the base color with relative
+  color syntax and rewrites the three `oklch()` channels.
 
 The page names the palette from the color, such as `mint` or `terracotta`. You
 can override the name.
+
+## The custom rail
+
+Pick `Custom` as the interpolation space. The curve follows, and hue
+interpolation turns off, because the rail sets every channel itself.
+
+```css
+:root {
+  --mint:     #3eb489;
+  --mint-300: oklch(from var(--mint) 0.81 calc(c * 0.49) h);
+  --mint-500: oklch(from var(--mint) 0.62 c              h);
+  --mint-700: oklch(from var(--mint) 0.49 calc(c * 1.14) h);
+}
+```
+
+Each channel plays a different part:
+
+- **L** is an absolute rail. Every palette puts its 300 at the same lightness,
+  so a generated 300 contrast-matches Tailwind's 300 whatever the base color
+  is.
+- **C** is a relative bell, scaled from the base color's own chroma. A muted
+  base gives a muted ramp instead of one that blows out around 600.
+- **H** is constant. Hue is linear enough in `oklch` that a drift buys little.
+
+The 500 keeps the base color's hue and chroma but not its lightness. That is
+the point of the mode: the rail stays intact.
+
+The table holds eleven anchors, from 50 to 950. Between the anchors the rail
+interpolates. Past the ends it extends the last segment, so a 20-step scale
+still separates its outermost steps.
+
+The mode needs relative color syntax. Chrome 119, Safari 16.4 and Firefox 128
+support it. Older browsers get a banner.
 
 ## How it works
 

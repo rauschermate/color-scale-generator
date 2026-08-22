@@ -74,6 +74,9 @@
       <label class="field">
         <span>Interpolation space</span>
         <select id="space">
+          <optgroup label="Relative">
+            <option value="custom">Custom</option>
+          </optgroup>
           <optgroup label="Rectangular">
             <option value="srgb">srgb</option>
             <option value="srgb-linear">srgb-linear</option>
@@ -111,6 +114,7 @@
       <label class="field">
         <span>Curve</span>
         <select id="curve">
+          <option value="custom">Custom</option>
           <option value="lshaped">L-shaped</option>
           <option value="linear">Linear</option>
         </select>
@@ -131,7 +135,7 @@
   <div class="panel">
     <div class="ramp"><div class="fill" id="rampFill"></div></div>
     <div class="steps tokens" id="stepsGrid"></div>
-    <p class="hint">Click a swatch to copy its value · <kbd>Alt</kbd>-click to copy its <code>color-mix()</code> expression.</p>
+    <p class="hint">Click a swatch to copy its value · <kbd>Alt</kbd>-click to copy its <code id="hintExpr">color-mix()</code> expression.</p>
   </div>
 
   <!-- CODE -->
@@ -303,12 +307,55 @@ function scaleTokens(n) {
   return new Set(snapped).size === snapped.length ? snapped : raw.map(v => Math.round(v));
 }
 
+/* ---- the custom rail ---------------------------------------------------
+   A different construction: no mix at all. Each step reads the seed with
+   relative color syntax and overrides the three oklch channels.
+
+     L   an absolute rail. Every palette puts its 300 at the same lightness,
+         so a generated 300 matches Tailwind's 300 whatever the seed is.
+     C   a relative bell, scaled from the seed's own chroma. A muted seed
+         gives a muted ramp instead of one that blows out around 600.
+     H   constant. Hue is linear enough in oklch that a drift buys little.
+
+   The 500 keeps the seed's hue and chroma but not its lightness. That is the
+   point of the mode: the rail stays intact.
+
+   The table is the rail at ten steps. Between anchors it interpolates. Past
+   the ends it extends the last segment, so a finer scale still separates its
+   outermost steps instead of flattening them onto one value. */
+const CUSTOM_RAMP = [
+  [ 50, 0.985, 0.07], [100, 0.93, 0.15], [200, 0.88, 0.28],
+  [300, 0.81,  0.49], [400, 0.71, 0.77], [500, 0.62, 1.00],
+  [600, 0.55,  1.15], [700, 0.49, 1.14], [800, 0.42, 0.93],
+  [900, 0.38,  0.68], [950, 0.28, 0.43],
+];
+const CUSTOM_L_MIN = 0.02, CUSTOM_L_MAX = 0.99;
+
+function customRamp(token) {
+  let i = CUSTOM_RAMP.findIndex(r => r[0] >= token);
+  if (i === -1) i = CUSTOM_RAMP.length - 1;            // past the dark end
+  if (i === 0) i = 1;                                  // past the light end
+  const [t0, l0, c0] = CUSTOM_RAMP[i - 1], [t1, l1, c1] = CUSTOM_RAMP[i];
+  const t = (token - t0) / (t1 - t0);
+  return {
+    L: Math.max(CUSTOM_L_MIN, Math.min(CUSTOM_L_MAX, l0 + (l1 - l0) * t)),
+    C: Math.max(0, c0 + (c1 - c0) * t),
+  };
+}
+
+function customStep(token, seed = state.color) {
+  const { L, C } = customRamp(token);
+  const c = Math.abs(C - 1) < 1e-9 ? "c" : `calc(c * ${num(C, 4)})`;
+  return `oklch(from ${seed} ${num(L, 4)} ${c} h)`;
+}
+
 /* Step i of the scale: tinted toward white below the base, shaded toward black
    above it. The base color itself is emitted verbatim, not round-tripped. */
-function buildStep(i, n, Lb = baseLightness()) {
+function buildStep(i, n, Lb, token) {
+  if (state.space === "custom") return customStep(token ?? scaleTokens(n)[i]);
   const k = n / 2;
   if (i === k) return state.color;                     // the picked color, verbatim
-  const p = stepPercent(i, n, Lb);
+  const p = stepPercent(i, n, Lb ?? baseLightness());
   const rest = num(100 - p, 4), keep = num(p, 4);
   return i < k
     ? `color-mix(in ${spaceClause()}, ${WHITE} ${rest}%, ${state.color} ${keep}%)`
@@ -356,7 +403,9 @@ function renderSteps(supported) {
   const n = state.steps;
   const tokens = scaleTokens(n);
   const base = n / 2;
-  const Lb = baseLightness();          // one lookup for the whole ramp
+  const custom = state.space === "custom";
+  const Lb = custom ? 0 : baseLightness();   // one lookup for the whole ramp
+  const seedVar = `var(--${slugify(paletteName())})`;
   const rows = [];
   const frag = document.createDocumentFragment();
 
@@ -364,16 +413,19 @@ function renderSteps(supported) {
   el.stepsWrap.style.setProperty("--cols", n + 1);
 
   for (let i = 0; i <= n; i++) {
-    const expr = buildStep(i, n, Lb);
+    const expr = buildStep(i, n, Lb, tokens[i]);
+    // the CSS block refers to the seed through a variable; the swatch cannot
+    const cssExpr = custom ? customStep(tokens[i], seedVar) : expr;
     const computed = supported ? resolveColor(expr) : null;
     const parsed = computed ? parseColor(computed) : null;
     const value = parsed ? formatColor(parsed, state.outFmt).text : "—";
-    rows.push({ token: tokens[i], expr, value, isBase: i === base });
+    rows.push({ token: tokens[i], expr, cssExpr, value, isBase: i === base });
 
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "step" + (i === base ? " base" : "");
-    btn.title = `${paletteName()}-${tokens[i]}  ·  ${value}` + (i === base ? "  (your color)" : "");
+    const baseNote = custom ? "  (seed hue and chroma, L on the rail)" : "  (your color)";
+    btn.title = `${paletteName()}-${tokens[i]}  ·  ${value}` + (i === base ? baseNote : "");
 
     const box = document.createElement("span");
     box.className = "chip-box";
@@ -400,16 +452,19 @@ function renderSteps(supported) {
 
   el.stepsWrap.replaceChildren(frag);
   el.scaleMeta.textContent = `${paletteName()} · ${n + 1} steps · ${n / 2} lighter, ${n / 2} darker`
-    + (state.curve === "linear" ? " · linear" : "");
+    + (custom ? " · oklch rail" : state.curve === "linear" ? " · linear" : "");
   return rows;
 }
 
 function renderCode(rows) {
   const useMix = state.cssMode === "mix";
+  const custom = state.space === "custom";
   const slug = slugify(paletteName());
   const fmtLabel = (FORMATS.find(f => f[0] === state.outFmt) || [])[1] || state.outFmt;
-  const head = `/* ${slug} — ${rows.length} steps in ${spaceClause()}, ${state.color} at 500`
-             + (useMix ? "" : ` — as ${fmtLabel}`) + " */";
+  const shape = custom
+    ? `${rows.length} steps from ${state.color} on the oklch rail`
+    : `${rows.length} steps in ${spaceClause()}, ${state.color} at 500`;
+  const head = `/* ${slug} — ${shape}` + (useMix ? "" : ` — as ${fmtLabel}`) + " */";
 
   const plain = [head, ":root {"];
   const html = [`<span class="c">${escapeHtml(head)}</span>`, ":root {"];
@@ -417,12 +472,20 @@ function renderCode(rows) {
   // pad the token so the values line up in the block
   const width = Math.max(...rows.map(r => String(r.token).length));
 
+  // the rail reads the seed on every line, so the seed needs a name
+  if (custom && useMix) {
+    const pad = " ".repeat(width + 1);
+    plain.push(`  --${slug}:${pad} ${state.color};`);
+    html.push(`  <span class="p">--${escapeHtml(slug)}</span>:${pad} ${escapeHtml(state.color)};`);
+  }
+
   rows.forEach(r => {
     const name = `--${slug}-${r.token}`;
     const pad = " ".repeat(width - String(r.token).length);
-    const resolved = r.value === "—" ? r.expr : r.value;
-    const value = useMix ? r.expr : resolved;
-    const note = r.isBase ? "  /* your color */" : "";   // the only note worth keeping
+    const resolved = r.value === "—" ? r.cssExpr : r.value;
+    const value = useMix ? r.cssExpr : resolved;
+    // in custom mode no step is the seed, so the note would be a lie
+    const note = r.isBase && !custom ? "  /* your color */" : "";
     plain.push(`  ${name}:${pad} ${value};${note}`);
     html.push(`  <span class="p">${escapeHtml(name)}</span>:${pad} ${escapeHtml(value)};`
             + (note ? `<span class="c">${note}</span>` : ""));
@@ -434,6 +497,7 @@ function renderCode(rows) {
 
   $("cssResolved").classList.toggle("active", !useMix);
   $("cssMix").classList.toggle("active", useMix);
+  $("cssMix").textContent = custom ? "oklch(from …)" : "color-mix()";
 }
 
 function render() {
@@ -447,20 +511,26 @@ function render() {
 
   renderBaseCard();
 
+  const custom = state.space === "custom";
+  $("hintExpr").textContent = custom ? "oklch(from …)" : "color-mix()";
+
   const probeExpr = buildStep(0, state.steps);
   const supported = isValidColor(probeExpr) && isValidColor(state.color);
 
   el.banner.innerHTML = "";
   if (!supported) {
-    const why = !isValidColor(state.color)
-      ? "That is not a valid CSS color."
+    const why = !isValidColor(state.color) ? "That is not a valid CSS color."
+      : custom ? "This browser rejected <code>oklch(from …)</code>. The custom rail needs relative color syntax."
       : `This browser rejected <code>color-mix(in ${spaceClause()}, …)</code>.`;
     el.banner.innerHTML = `<div class="banner">${why}</div>`;
   }
 
-  // span the scale's real endpoints, which stop short of white and black
-  const grad = `linear-gradient(to right in ${spaceClause()}, ${buildStep(0, state.steps)}, `
-             + `${state.color} 50%, ${buildStep(state.steps, state.steps)})`;
+  // the rail is a set of independent stops, so plot them all; a mix scale only
+  // needs its real endpoints, which stop short of white and black
+  const grad = custom
+    ? `linear-gradient(to right in oklch, ${scaleTokens(state.steps).map(t => customStep(t)).join(", ")})`
+    : `linear-gradient(to right in ${spaceClause()}, ${buildStep(0, state.steps)}, `
+      + `${state.color} 50%, ${buildStep(state.steps, state.steps)})`;
   el.rampFill.style.background = "";
   el.rampFill.style.background = grad;
 
@@ -487,9 +557,21 @@ document.querySelectorAll(".chip[data-value]").forEach(btn => {
   });
 });
 
-el.space.addEventListener("change", () => { state.space = el.space.value; render(); save(); });
+/* The custom rail is one construction, not a space plus a curve. So the two
+   selects move together: pick it in either and the other follows. */
+el.space.addEventListener("change", () => {
+  state.space = el.space.value;
+  if (state.space === "custom") state.curve = "custom";
+  else if (state.curve === "custom") state.curve = "lshaped";
+  render(); save();
+});
 el.hue.addEventListener("change", () => { state.hue = el.hue.value; render(); save(); });
-el.curve.addEventListener("change", () => { state.curve = el.curve.value; render(); save(); });
+el.curve.addEventListener("change", () => {
+  state.curve = el.curve.value;
+  if (state.curve === "custom") state.space = "custom";
+  else if (state.space === "custom") state.space = "oklch";
+  render(); save();
+});
 
 /* Only even counts make a symmetric scale. Applied live when the typed value is
    already even and in range; anything else is tidied up when the field is left,
@@ -521,6 +603,10 @@ document.querySelectorAll("[data-css]").forEach(btn => {
 
 /* --- boot --- */
 load();
+// a stored state from an older version can hold only half of the custom pair
+if (state.space === "custom" || state.curve === "custom") {
+  state.space = "custom"; state.curve = "custom";
+}
 initTheme(render);
 
 if (!window.CSS || !CSS.supports("color", "color-mix(in oklab, red, blue)")) {
