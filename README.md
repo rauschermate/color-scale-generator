@@ -7,7 +7,6 @@ browser.
 
 ## Mixer
 
-`index.html`
 Mix two colors in any of the 15 CSS interpolation spaces. The page shows the
 resolved value, a step ramp, and the CSS for both.
 
@@ -17,7 +16,6 @@ resolved value, a step ramp, and the CSS for both.
 
 ## Scale
 
-`scale.html`
 Build a design-system palette from one color. The color becomes the `500`.
 Lighter steps go toward white and darker steps go toward black.
 
