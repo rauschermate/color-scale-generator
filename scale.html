@@ -114,7 +114,8 @@
       <label class="field">
         <span>Curve</span>
         <select id="curve">
-          <option value="custom">Custom</option>
+          <!-- shown only while the space is Custom; the rail picks it, you cannot -->
+          <option value="custom" id="curveCustom" hidden disabled>Custom</option>
           <option value="lshaped">L-shaped</option>
           <option value="linear">Linear</option>
         </select>
@@ -169,7 +170,8 @@ const WHITE = "white", BLACK = "black";
 const el = {
   textBase: $("textBase"), pickBase: $("pickBase"), fillBase: $("fillBase"), dotBase: $("dotBase"),
   nameInput: $("nameInput"),
-  space: $("space"), hue: $("hue"), steps: $("steps"), curve: $("curve"),
+  space: $("space"), hue: $("hue"), steps: $("steps"),
+  curve: $("curve"), curveCustom: $("curveCustom"),
   inFmt: $("inFmt"), outFmt: $("outFmt"),
   rampFill: $("rampFill"), stepsWrap: $("stepsGrid"), scaleMeta: $("scaleMeta"),
   code: $("code"), banner: $("banner"),
@@ -181,7 +183,8 @@ const state = {
   space: "oklch",
   hue: "shorter",
   steps: 10,
-  curve: "lshaped",     // "lshaped" | "linear"
+  curve: "lshaped",     // "lshaped" | "linear" | "custom" (set by the space)
+  lastCurve: "lshaped", // the curve to restore when the rail turns off
   inFmt: "hex",
   outFmt: "hex",
   cssMode: "resolved",
@@ -501,17 +504,20 @@ function renderCode(rows) {
 }
 
 function render() {
+  const custom = state.space === "custom";
   el.space.value = state.space;
   el.hue.value = state.hue;
   el.hue.disabled = !POLAR_SPACES.has(state.space);
+  // the rail sets the curve, so the option only exists while the rail is on
+  el.curveCustom.hidden = el.curveCustom.disabled = !custom;
   el.curve.value = state.curve;
+  el.curve.disabled = custom;
   el.inFmt.value = state.inFmt;
   el.outFmt.value = state.outFmt;
   if (document.activeElement !== el.steps) el.steps.value = state.steps;
 
   renderBaseCard();
 
-  const custom = state.space === "custom";
   $("hintExpr").textContent = custom ? "oklch(from …)" : "color-mix()";
 
   const probeExpr = buildStep(0, state.steps);
@@ -557,21 +563,16 @@ document.querySelectorAll(".chip[data-value]").forEach(btn => {
   });
 });
 
-/* The custom rail is one construction, not a space plus a curve. So the two
-   selects move together: pick it in either and the other follows. */
+/* The custom rail is one construction, not a space plus a curve. The space
+   picks it, and the curve follows. Leaving it restores the previous curve. */
 el.space.addEventListener("change", () => {
   state.space = el.space.value;
-  if (state.space === "custom") state.curve = "custom";
-  else if (state.curve === "custom") state.curve = "lshaped";
+  if (state.space === "custom") { state.lastCurve = state.curve; state.curve = "custom"; }
+  else if (state.curve === "custom") state.curve = state.lastCurve || "lshaped";
   render(); save();
 });
 el.hue.addEventListener("change", () => { state.hue = el.hue.value; render(); save(); });
-el.curve.addEventListener("change", () => {
-  state.curve = el.curve.value;
-  if (state.curve === "custom") state.space = "custom";
-  else if (state.space === "custom") state.space = "oklch";
-  render(); save();
-});
+el.curve.addEventListener("change", () => { state.curve = el.curve.value; render(); save(); });
 
 /* Only even counts make a symmetric scale. Applied live when the typed value is
    already even and in range; anything else is tidied up when the field is left,

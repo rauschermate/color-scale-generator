@@ -33,8 +33,8 @@ can override the name.
 
 ## The custom rail
 
-Pick `Custom` as the interpolation space. The curve follows, and hue
-interpolation turns off, because the rail sets every channel itself.
+Pick `Custom` as the interpolation space. The curve reads `Custom` and locks,
+and hue interpolation turns off, because the rail sets every channel itself.
 
 ```css
 :root {
