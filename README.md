@@ -5,8 +5,9 @@ Two browser tools for the CSS `color-mix()` function.
 No build step, no dependencies, no network requests. Open `index.html` in a
 browser.
 
-## Mixer — `index.html`
+## Mixer
 
+`index.html`
 Mix two colors in any of the 15 CSS interpolation spaces. The page shows the
 resolved value, a step ramp, and the CSS for both.
 
@@ -14,8 +15,9 @@ resolved value, a step ramp, and the CSS for both.
 - Output converts to 16 formats, from `hex` to `color(display-p3 …)`.
 - The step count is configurable.
 
-## Scale — `scale.html`
+## Scale
 
+`scale.html`
 Build a design-system palette from one color. The color becomes the `500`.
 Lighter steps go toward white and darker steps go toward black.
 
