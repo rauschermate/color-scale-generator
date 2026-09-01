@@ -82,3 +82,11 @@ the gamut mapping.
 | `color-engine.js` | Color science: parse, convert, format, gamut map, name |
 | `ui-common.js` | Clipboard, toast, theme, and the browser color probe |
 | `styles.css` | Shared styles for both pages |
+
+## Credits
+
+The theme toggle icon uses [Lucide](https://lucide.dev), under the ISC license.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
